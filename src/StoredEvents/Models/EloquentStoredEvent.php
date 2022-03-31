@@ -8,6 +8,9 @@ use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 use Spatie\EventSourcing\StoredEvents\StoredEvent;
 use Spatie\SchemalessAttributes\SchemalessAttributes;
 
+/**
+ * @property-read \Spatie\SchemalessAttributes\SchemalessAttributes $meta_data
+ */
 class EloquentStoredEvent extends Model
 {
     public $guarded = [];
@@ -20,7 +23,7 @@ class EloquentStoredEvent extends Model
         'event_properties' => 'array',
         'meta_data' => 'array',
     ];
-    
+
     protected ?ShouldBeStored $originalEvent = null;
 
     public function toStoredEvent(): StoredEvent
@@ -35,11 +38,11 @@ class EloquentStoredEvent extends Model
             'created_at' => $this->created_at,
         ], $this->originalEvent);
     }
-    
+
     public function setOriginalEvent(ShouldBeStored $event): self
     {
         $this->originalEvent = $event;
-        
+
         return $this;
     }
 
@@ -51,11 +54,6 @@ class EloquentStoredEvent extends Model
     public function getMetaDataAttribute(): SchemalessAttributes
     {
         return SchemalessAttributes::createForModel($this, 'meta_data');
-    }
-
-    public function scopeWithMetaDataAttributes(): Builder
-    {
-        return SchemalessAttributes::scopeWithSchemalessAttributes('meta_data');
     }
 
     public function scopeStartingFrom(Builder $query, int $storedEventId): void
@@ -71,5 +69,15 @@ class EloquentStoredEvent extends Model
     public function scopeUuid(Builder $query, string $uuid): void
     {
         $query->where('aggregate_uuid', $uuid);
+    }
+
+    public function scopeWithMetaDataAttributes(): Builder
+    {
+        // Legacy support for laravel-schemaless-attributes:^1.0
+        if (! method_exists($this->meta_data, 'modelScope')) {
+            return $this->meta_data->scopeWithSchemalessAttributes('meta_data');
+        }
+
+        return $this->meta_data->modelScope();
     }
 }
