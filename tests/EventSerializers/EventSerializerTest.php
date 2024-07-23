@@ -71,7 +71,6 @@ class EventSerializerTest extends TestCase
                 'id' => 1,
                 'relations' => [],
                 'connection' => $this->dbDriver(),
-                'collectionClass' => null,
             ],
             'amount' => 1234,
         ], $array);
